@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ระบบข้อมูลโรงเรียน - กรุงเทพมหานคร</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- ฟอนต์ Kanit -->
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+  <!-- Font Awesome สำหรับไอคอน -->
+  <script src="https://kit.fontawesome.com/7f8c61f854.js" crossorigin="anonymous"></script>
+  <!-- Chart.js สำหรับกราฟ -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Turf.js (ตรวจสอบจุดว่าอยู่ภายในโพลิกอนหรือไม่) -->
+  <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+
+  <style>
+    /* ------------------------------------------- */
+    /* Base styles and Theme variables */
+    /* ------------------------------------------- */
+    :root {
+      /* Light Mode Defaults */
+      --bg-color: #f8f8f8;
+      --text-color: #3A3A3A;
+      --subtitle-color: #666;
+      --box-bg-color: #fff;
+      --box-border-color: #e5e5e5;
+      --box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+      --input-border-color: #e5e5e5;
+      --input-focus-border-color: #7A5C4E;
+      --input-focus-shadow: 0 0 0 4px rgba(122, 92, 78, 0.2);
+      --icon-color: #777;
+      --footer-bg-color: #f3f4f6; /* gray-100 */
+      --footer-text-color: #6b7280; /* gray-600 */
+      --map-bg-color: #eef2f5;
+      --map-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+      --legend-bg-color: rgba(255, 255, 255, 0.98);
+      --legend-text-color: #4A4A4A;
+      --legend-title-color: #7A5C4E;
+      --popup-bg-color: #fff;
+      --popup-text-color: #3A3A3A;
+      --popup-sub-text-color: #777;
+      --popup-link-color: #7A5C4E;
+      --loading-bg: rgba(0, 0, 0, 0.85);
+      --loading-text: white;
+      --loading-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      --leaflet-control-bg: #fff;
+      --leaflet-control-shadow: 0 3px 10px rgba(0,0,0,0.12);
+      --leaflet-control-hover-bg: #f0f0f0;
+      --leaflet-control-hover-shadow: 0 5px 15px rgba(0,0,0,0.18);
+      --leaflet-control-zoom-color: #555;
+      --district-stroke: #666;
+      --district-label-color: #333;
+      --district-label-shadow: 1px 1px 2px rgba(255,255,255,0.7);
+      --marker-border-color: #fff; /* Border color for school markers */
+      --filter-arrow-svg: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+      --time-bg-color: #fff;
+      --time-text-color: #3A3A3A;
+      --gemini-button-bg: linear-gradient(to right, #6A1B9A, #9C27B0); /* Purple gradient */
+      --gemini-button-hover-bg: linear-gradient(to right, #7B1FA2, #AF52BF);
+      --gemini-loading-spinner-color: #9C27B0;
+
+      /* ===== ปรับสีใหม่ตรงนี้ ===== */
+      /* โรงเรียนประถม (Primary) → สีส้ม “สด” */
+      --primary-school-marker-color: #FF5722;
+      /* โรงเรียนมัธยม (Secondary) → สีเหลือง “แอมเบอร์” */
+      --secondary-school-marker-color: #FFC107;
+      /* สถานี BTS → สีเขียวอ่อน “มิวต์” */
+      --bts-station-marker-color: #66BB6A;
+      /* สถานี MRT → สีฟ้าอ่อน “มิวต์” */
+      --mrt-station-marker-color: #42A5F5;
+      /* ขอบเขตเขต (ตัวอย่างใช้สีส้มอ่อน) */
+      --district-fill-color-example: #FFE0B2;
+
+      /* Chart colors */
+      --chart-bar-bg-color: #FF8C00; /* Orange */
+      --chart-bar-border-color: #D95A00; /* Darker Orange */
+      --chart-grid-color: #e5e5e5;
+      --chart-text-color: #3A3A3A;
+      --chart-tooltip-bg: rgba(0, 0, 0, 0.7);
+      --chart-tooltip-text: #fff;
+    }
+
+    /* Dark Mode overrides */
+    body.dark {
+      --bg-color: #2D3748; /* Dark Blue-Gray */
+      --text-color: #E2E8F0; /* Light Gray */
+      --subtitle-color: #A0AEC0; /* Lighter Gray */
+      --box-bg-color: #4A5568; /* Slightly lighter than bg */
+      --box-border-color: #6C7A90;
+      --box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+      --input-border-color: #6C7A90;
+      --input-focus-border-color: #9F7AEA; /* Purple for focus */
+      --input-focus-shadow: 0 0 0 4px rgba(159, 122, 234, 0.3);
+      --icon-color: #A0AEC0;
+      --footer-bg-color: #2A313C;
+      --footer-text-color: #CBD5E0;
+      --map-bg-color: #2F3C50;
+      --map-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+      --legend-bg-color: rgba(69, 81, 99, 0.98); /* Darker semi-transparent */
+      --legend-text-color: #CBD5E0;
+      --legend-title-color: #9F7AEA; /* Purple */
+      --popup-bg-color: #4A5568;
+      --popup-text-color: #E2E8F0;
+      --popup-sub-text-color: #CBD5E0;
+      --popup-link-color: #9F7AEA;
+      --loading-bg: rgba(255, 255, 255, 0.85); /* Light background for loading */
+      --loading-text: #2D3748;
+      --loading-shadow: 0 10px 25px rgba(255, 255, 255, 0.4);
+      --leaflet-control-bg: #4A5568;
+      --leaflet-control-shadow: 0 3px 10px rgba(0,0,0,0.3);
+      --leaflet-control-hover-bg: #5A6A80;
+      --leaflet-control-hover-shadow: 0 5px 15px rgba(0,0,0,0.4);
+      --leaflet-control-zoom-color: #E2E8F0;
+      --district-stroke: #A0AEC0;
+      --district-label-color: #E2E8F0;
+      --district-label-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+      --marker-border-color: #4A5568;
+      --filter-arrow-svg: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23A0AEC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+      --time-bg-color: #4A5568;
+      --time-text-color: #E2E8F0;
+      --gemini-button-bg: linear-gradient(to right, #9F7AEA, #AF52BF);
+      --gemini-button-hover-bg: linear-gradient(to right, #AF52BF, #C498F0);
+      --gemini-loading-spinner-color: #AF52BF;
+
+      /* Marker & chart colors in dark mode */
+      --primary-school-marker-color: #FF8A50; /* ส้มเข้มยิ่งขึ้น */
+      --secondary-school-marker-color: #FFD740; /* เหลืองอมทองเข้มขึ้น */
+      /* สถานี BTS (Dark Mode) → สีเขียวมิวต์ลงอีกเล็กน้อย */
+      --bts-station-marker-color: #81C784;
+      /* สถานี MRT (Dark Mode) → สีฟ้ามิวต์ลงอีกเล็กน้อย */
+      --mrt-station-marker-color: #64B5F6;
+      --district-fill-color-example: #FFE082;
+      --chart-bar-bg-color: #9F7AEA;
+      --chart-bar-border-color: #AF52BF;
+      --chart-grid-color: #6C7A90;
+      --chart-text-color: #E2E8F0;
+      --chart-tooltip-bg: rgba(255, 255, 255, 0.9);
+      --chart-tooltip-text: #2D3748;
+    }
+
+    /* Body Base */
+    body {
+      font-family: 'Kanit', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      scroll-behavior: smooth;
+    }
+
+    /* Navbar */
+    .navbar-orange-gold {
+      background-image: linear-gradient(to right, #FF8C00, #FFD700);
+    }
+
+    /* Map Container */
+    #map {
+      height: 600px;
+      width: 100%;
+      background-color: var(--map-bg-color);
+      border-radius: 12px;
+      box-shadow: var(--map-shadow);
+      transition: all 0.4s ease-in-out;
+    }
+    #map.loading {
+      filter: blur(3px);
+      opacity: 0.7;
+    }
+
+    /* Controls Container (Search / Filter / Stats) */
+    #controls-container {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #search-box, #filter-box, #statistics-box {
+      background: var(--box-bg-color);
+      padding: 12px 18px;
+      border-radius: 12px;
+      box-shadow: var(--box-shadow);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    #statistics-box {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 16px 20px;
+      gap: 8px;
+      font-size: 1.1em;
+      color: var(--text-color);
+    }
+    #statistics-box h4 {
+      margin: 0 0 6px 0;
+      color: var(--legend-title-color);
+      font-weight: 700;
+      font-size: 1.2em;
+      width: 100%;
+      border-bottom: 1px solid var(--box-border-color);
+      padding-bottom: 6px;
+    }
+    #statistics-box div {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+    #statistics-box strong {
+      color: var(--text-color);
+      font-weight: 600;
+    }
+
+    #search-input, #district-filter {
+      width: 280px;
+      padding: 10px 16px;
+      border: 1px solid var(--input-border-color);
+      border-radius: 10px;
+      font-size: 1.05em;
+      outline: none;
+      appearance: none;
+      background-color: var(--box-bg-color);
+      color: var(--text-color);
+      background-image: var(--filter-arrow-svg);
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 18px;
+      cursor: pointer;
+      font-family: 'Kanit', sans-serif;
+    }
+    #search-input::placeholder {
+      color: var(--subtitle-color);
+    }
+    #search-input:focus, #district-filter:focus {
+      border-color: var(--input-focus-border-color);
+      box-shadow: var(--input-focus-shadow);
+    }
+    .control-icon {
+      color: var(--icon-color);
+      font-size: 1.2em;
+      transition: color 0.3s ease;
+    }
+
+    /* Autocomplete list */
+    #autocomplete-list {
+      position: absolute;
+      top: calc(100% - 8px);
+      left: 0;
+      width: 100%;
+      max-height: 220px;
+      overflow-y: auto;
+      background: var(--box-bg-color);
+      border: 1px solid var(--box-border-color);
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      box-shadow: var(--box-shadow);
+      z-index: 1001;
+      display: none;
+      transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    #autocomplete-list.show {
+      display: block;
+    }
+    #autocomplete-list div {
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 1em;
+      color: var(--text-color);
+      font-family: 'Kanit', sans-serif;
+      transition: background-color 0.2s, color 0.2s;
+    }
+    #autocomplete-list div:hover,
+    #autocomplete-list div.autocomplete-active {
+      background-color: var(--input-border-color);
+      color: var(--text-color);
+    }
+
+    /* Loading Message */
+    #loading-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1001;
+      background: var(--loading-bg);
+      color: var(--loading-text);
+      padding: 20px 40px;
+      border-radius: 12px;
+      font-size: 1.4em;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out, background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+      pointer-events: none;
+      box-shadow: var(--loading-shadow);
+    }
+    #loading-message.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .spinner {
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-top: 5px solid var(--loading-text);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      animation: spin 1s linear infinite;
+    }
+    body.dark .spinner {
+      border: 5px solid rgba(0, 0, 0, 0.3);
+      border-top: 5px solid var(--loading-text);
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Leaflet Controls & Legend */
+    .leaflet-control-container .leaflet-top.leaflet-right {
+      padding: 25px;
+      padding-top: 100px;
+    }
+    @media (max-width: 768px) {
+      .leaflet-control-container .leaflet-top.leaflet-right {
+        padding-top: 80px;
+      }
+    }
+    .leaflet-control-layers-toggle,
+    .leaflet-control-zoom-in,
+    .leaflet-control-zoom-out {
+      background-color: var(--leaflet-control-bg);
+      border-radius: 10px !important;
+      box-shadow: var(--leaflet-control-shadow) !important;
+      transition: background-color 0.2s, box-shadow 0.2s;
+    }
+    .leaflet-control-layers-toggle:hover,
+    .leaflet-control-zoom-in:hover,
+    .leaflet-control-zoom-out:hover {
+      background-color: var(--leaflet-control-hover-bg);
+      box-shadow: var(--leaflet-control-hover-shadow) !important;
+    }
+    .leaflet-control-layers-toggle {
+      width: 40px !important;
+      height: 40px !important;
+      background-size: 28px 28px !important;
+      background-position: center !important;
+    }
+    .leaflet-control-zoom a {
+      font-size: 26px !important;
+      color: var(--leaflet-control-zoom-color);
+    }
+    .info.legend {
+      background: var(--legend-bg-color);
+      padding: 12px 18px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      font-size: 1em;
+      line-height: 1.6;
+      color: var(--legend-text-color);
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    .info.legend h4 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: var(--legend-title-color);
+      font-weight: 700;
+      font-size: 1.2em;
+      transition: color 0.3s ease;
+    }
+    .info.legend i {
+      width: 20px;
+      height: 20px;
+      float: left;
+      margin-right: 10px;
+      opacity: 0.9;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Legend Colors */
+    .info.legend .primary-school-legend {
+      background: var(--primary-school-marker-color);
+      border-radius: 50%;
+    }
+    .info.legend .secondary-school-legend {
+      background: var(--secondary-school-marker-color);
+      border-radius: 50%;
+    }
+    .info.legend .district-legend {
+      background: var(--district-fill-color-example);
+      width: 20px;
+      height: 20px;
+      float: left;
+      margin-right: 10px;
+      opacity: 0.8;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    .info.legend .bts-station-legend {
+      background: var(--bts-station-marker-color);
+      border-radius: 50%;
+    }
+    .info.legend .mrt-station-legend {
+      background: var(--mrt-station-marker-color);
+      border-radius: 50%;
+    }
+    /* สำหรับ Heatmap Legend: ทำให้แสดงกราเดียนต์ */
+    .info.legend .heatmap-legend-box {
+      width: 80px;
+      height: 12px;
+      margin-bottom: 6px;
+      background: linear-gradient(to right, #ADD8E6, #FFA500, #FF0000);
+      border: 1px solid var(--district-stroke);
+      float: left;
+      margin-right: 10px;
+    }
+
+    /* Marker Icons */
+    .marker-base {
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      opacity:0.9;
+      border:2px solid var(--marker-border-color);
+      box-shadow:0 0 3px rgba(0,0,0,0.15);
+      transition: border-color 0.3s ease, background 0.3s ease;
+    }
+    .primary-school-marker-icon {
+      background: var(--primary-school-marker-color);
+    }
+    .secondary-school-marker-icon {
+      background: var(--secondary-school-marker-color);
+    }
+    .bts-station-marker-icon {
+      background: var(--bts-station-marker-color);
+    }
+    .mrt-station-marker-icon {
+      background: var(--mrt-station-marker-color);
+    }
+
+    /* Popup Styling */
+    .leaflet-popup-content-wrapper {
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      background-color: var(--popup-bg-color);
+      transition: background-color 0.3s ease;
+    }
+    .leaflet-popup-content {
+      padding: 10px !important;
+      font-family: 'Kanit', sans-serif;
+      font-size: 1em;
+      color: var(--popup-text-color);
+      transition: color 0.3s ease;
+    }
+    .leaflet-popup-content strong {
+      font-size: 1.15em;
+      color: var(--popup-text-color);
+    }
+    .leaflet-popup-content span {
+      color: var(--popup-sub-text-color);
+    }
+    .leaflet-popup-content a {
+      color: var(--popup-link-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+    .leaflet-popup-content a:hover {
+      text-decoration: underline;
+    }
+
+    /* Gemini Button */
+    .gemini-button {
+      background: var(--gemini-button-bg);
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.95em;
+      font-weight: 500;
+      transition: background 0.3s ease, transform 0.1s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .gemini-button:hover {
+      background: var(--gemini-button-hover-bg);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    }
+    .gemini-button:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .gemini-loading-spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid var(--gemini-loading-spinner-color);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+    .gemini-loading-spinner.show {
+      display: inline-block;
+    }
+    body.dark .gemini-loading-spinner {
+      border: 3px solid rgba(0, 0, 0, 0.3);
+      border-top: 3px solid var(--gemini-loading-spinner-color);
+    }
+
+    #school-description-output {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid var(--box-border-color);
+      border-radius: 8px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-size: 0.9em;
+      line-height: 1.5;
+      max-height: 200px;
+      overflow-y: auto;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+    #school-description-output.empty {
+      display: none;
+    }
+
+    /* District Polygons */
+    .district-polygon {
+      stroke: var(--district-stroke);
+      stroke-width: 1.8;
+      fill-opacity: 0.45;
+      transition: fill-opacity 0.3s ease-in-out, stroke-width 0.3s ease-in-out, stroke 0.3s ease;
+    }
+    .district-polygon:hover {
+      fill-opacity: 0.75;
+      stroke-width: 2.5;
+      color: var(--text-color);
+    }
+
+    /* Tooltip Label for District */
+    .district-label {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      font-size: 1.1em;
+      font-weight: 600;
+      color: var(--district-label-color);
+      text-shadow: var(--district-label-shadow);
+      pointer-events: none;
+      white-space: nowrap;
+      text-align: center;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+    .leaflet-tooltip-tip {
+      display: none !important;
+    }
+
+    /* Real-time Clock */
+    #real-time-clock {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: var(--time-bg-color);
+      color: var(--time-text-color);
+      padding: 10px 16px;
+      border-radius: 12px;
+      box-shadow: var(--box-shadow);
+      font-size: 1.2em;
+      font-weight: 600;
+      transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* Chart Container */
+    #chart-container {
+      background-color: var(--box-bg-color);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: var(--box-shadow);
+      margin-top: 40px;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      height: 600px;
+      display: flex;
+      align-items: center;
+    }
+    #school-count-chart {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .main-title { font-size: 2.5rem; }
+      .main-subtitle { font-size: 1rem; }
+      #controls-container {
+        top: 10px; left: 10px; right: 10px;
+        flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px;
+      }
+      #search-box, #filter-box, #statistics-box {
+        width: calc(50% - 10px); padding: 8px 12px; font-size: 0.9em; gap: 8px;
+      }
+      #search-input, #district-filter { width: 100%; padding: 8px 12px; font-size: 0.9em; }
+      #statistics-box { width: 100%; padding: 10px 15px; }
+      #map { height: 400px; }
+      #real-time-clock { top: 10px; right: 10px; font-size: 1em; padding: 8px 12px; }
+      #chart-container { height: 400px; padding: 16px; margin-top: 30px; }
+      .leaflet-control-container .leaflet-top.leaflet-right {
+        padding-top: 80px;
+      }
+    }
+  </style>
+</head>
+<body class="antialiased">
+  <!-- Navbar -->
+  <nav class="navbar-orange-gold shadow-xl py-4 px-6 md:px-12 rounded-b-xl sticky top-0 z-50">
+    <div class="container mx-auto flex justify-between items-center">
+      <a href="#home-section" class="text-white text-2xl md:text-3xl font-bold tracking-wide">
+        ระบบข้อมูลโรงเรียน
+      </a>
+      <div class="hidden md:flex space-x-6 items-center">
+        <a href="#home-section" class="text-white hover:text-gray-200 transition duration-300 ease-in-out px-4 py-2 rounded-lg font-medium">หน้าหลัก</a>
+        <a href="contact.html" class="bg-white text-orange-600 hover:bg-gray-100 transition duration-300 ease-in-out px-4 py-2 rounded-lg font-semibold shadow-md">ติดต่อเรา</a>
+        <a href="#school-map-section" class="text-white hover:text-gray-200 transition duration-300 ease-in-out px-4 py-2 rounded-lg font-medium">แผนที่โรงเรียน</a>
+        <!-- ปุ่มสลับธีม -->
+        <button id="theme-toggle" class="bg-white text-gray-700 hover:bg-gray-100 transition duration-300 ease-in-out px-3 py-2 rounded-lg shadow-md flex items-center gap-2">
+          <i class="fas fa-sun" id="theme-icon"></i>
+          <span class="hidden md:inline">สลับธีม</span>
+        </button>
+      </div>
+      <div class="md:hidden">
+        <button class="text-white focus:outline-none">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="flex-grow">
+    <!-- Section: ภาพรวมข้อมูล -->
+    <section id="home-section" class="container mx-auto px-4 py-16 text-center">
+      <h1 class="main-title text-4xl md:text-5xl font-extrabold text-gray-800 leading-tight">
+        ข้อมูลโรงเรียนใน&nbsp;<span class="text-orange-600">กรุงเทพมหานคร</span>
+      </h1>
+      <p class="main-subtitle text-lg md:text-xl text-gray-600 mt-4 max-w-2xl mx-auto mb-8">
+        ค้นหาโรงเรียนที่คุณต้องการด้วยระบบแผนที่อัจฉริยะ พร้อมข้อมูลที่อัปเดตตามเวลาจริง
+      </p>
+
+      <h2 class="text-3xl font-bold text-gray-800 mb-8 mt-12 text-center">ภาพรวมข้อมูลที่น่าสนใจ</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center transform transition duration-300 hover:scale-105 hover:shadow-2xl">
+          <div class="rounded-md mb-4 overflow-hidden w-full aspect-w-16 aspect-h-9 border border-gray-200">
+            <img src="numstu.jpg" alt="แผนที่แสดงจำนวนนักเรียนในแต่ละเขต" class="w-full h-full object-cover">
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">จำนวนนักเรียนในแต่ละเขต</h3>
+          <p class="text-gray-600 text-center text-sm">แสดงการกระจายตัวของจำนวนนักเรียนในแต่ละเขตของกรุงเทพมหานคร</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center transform transition duration-300 hover:scale-105 hover:shadow-2xl">
+          <div class="rounded-md mb-4 overflow-hidden w-full aspect-w-16 aspect-h-9 border border-gray-200">
+            <img src="total.jpg" alt="แผนที่แสดงจำนวนประชากรในแต่ละเขต" class="w-full h-full object-cover">
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">จำนวนประชากรในแต่ละเขต</h3>
+          <p class="text-gray-600 text-center text-sm">แสดงข้อมูลการกระจายตัวของประชากรในแต่ละเขตพื้นที่</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center transform transition duration-300 hover:scale-105 hover:shadow-2xl">
+          <div class="rounded-md mb-4 overflow-hidden w-full aspect-w-16 aspect-h-9 border border-gray-200">
+            <img src="ขอบเขต.jpg" alt="แผนที่แสดงขอบเขตของกรุงเทพมหานคร" class="w-full h-full object-cover">
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">ขอบเขตกรุงเทพมหานคร</h3>
+          <p class="text-gray-600 text-center text-sm">แสดงแผนที่ขอบเขตการปกครองของกรุงเทพมหานคร</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: แผนที่โรงเรียน -->
+    <section id="school-map-section" class="container mx-auto px-4 py-16 relative">
+      <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">แผนที่ข้อมูลโรงเรียนในกรุงเทพมหานคร</h2>
+
+      <!-- Controls: Search / Filter / Stats -->
+      <div id="controls-container">
+        <div id="search-box" class="relative">
+          <i class="fas fa-search control-icon absolute left-4 top-1/2 transform -translate-y-1/2"></i>
+          <input type="text" id="search-input" placeholder="ค้นหาชื่อโรงเรียน..." class="pl-10"/>
+          <div id="autocomplete-list" class="absolute"></div>
+        </div>
+        <div id="filter-box">
+          <i class="fas fa-filter control-icon"></i>
+          <select id="district-filter">
+            <option value="">เลือกเขตทั้งหมด</option>
+          </select>
+        </div>
+        <div id="statistics-box">
+          <h4>ภาพรวมโรงเรียน</h4>
+          <div><span>จำนวนโรงเรียนทั้งหมด:</span> <strong id="total-schools">0</strong> แห่ง</div>
+          <div><span>โรงเรียนประถม:</span> <strong id="primary-schools">0</strong> แห่ง</div>
+          <div><span>โรงเรียนมัธยม:</span> <strong id="secondary-schools">0</strong> แห่ง</div>
+        </div>
+      </div>
+
+      <!-- Real-time Clock -->
+      <div id="real-time-clock"></div>
+
+      <!-- Map Container -->
+      <div id="map" class="w-full mx-auto mt-4"></div>
+      <div id="loading-message"><div class="spinner"></div><span>กำลังโหลดข้อมูล...</span></div>
+    </section>
+
+    <!-- Section: กราฟจำนวนโรงเรียนต่อเขต -->
+    <section id="chart-section" class="container mx-auto px-4 py-16">
+      <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">จำนวนโรงเรียนในแต่ละเขต</h2>
+      <div id="chart-container">
+        <canvas id="school-count-chart"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-gray-100 text-gray-600 py-6 text-center mt-auto rounded-t-xl shadow-inner">
+    <p>© 2025 ระบบข้อมูลโรงเรียน. สงวนลิขสิทธิ์.</p>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Heatmap plugin -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+  <!-- MarkerCluster plugin -->
+  <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+  <!-- เรียกใช้งานไฟล์ JavaScript หลัก (main.js) -->
+  <script src="main.js"></script>
+</body>
+</html>
