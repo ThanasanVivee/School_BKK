@@ -14,14 +14,18 @@
   let currentTileLayer    = null;
   let transitData         = null; // เก็บ transit_stations.json ไว้ใช้คำนวณ nearbyStations
 
-  // สร้างแผนที่ Leaflet และตั้งค่าเริ่มต้น
+  // สร้างแผนที่ Leaflet และตั้งค่าเริ่มต้น (ยังไม่ใส่ Tile Layer)
   const map = L.map('map', { zoomControl: false }).setView([13.7563, 100.5018], 11);
 
-  // Tile Layer (Light / Dark Mode) เริ่มต้น
+  // -------------------------------------------------------------------------------------------------
+  // Tile Layer (Light / Dark Mode)
+  // -------------------------------------------------------------------------------------------------
   function addTileLayer(theme) {
+    // ถ้ามี Layer เก่าอยู่ ให้ลบทิ้งก่อน
     if (currentTileLayer) {
       map.removeLayer(currentTileLayer);
     }
+    // สร้างและใส่ Tile ให้ตรงกับธีม
     if (theme === 'dark') {
       currentTileLayer = L.tileLayer(
         'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
@@ -42,13 +46,15 @@
       ).addTo(map);
     }
   }
-  // อ่านค่า theme ที่เคยบันทึกใน localStorage
-  addTileLayer(localStorage.getItem('theme') === 'dark' ? 'dark' : 'light');
 
+  // -------------------------------------------------------------------------------------------------
   // ย้ายปุ่ม Zoom ไปมุมล่างซ้าย
+  // -------------------------------------------------------------------------------------------------
   L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
+  // -------------------------------------------------------------------------------------------------
   // เก็บ reference ของ DOM elements
+  // -------------------------------------------------------------------------------------------------
   const searchInput       = document.getElementById('search-input');
   const autocompleteList  = document.getElementById('autocomplete-list');
   const districtFilter    = document.getElementById('district-filter');
@@ -73,12 +79,14 @@
     mapElement.classList.remove('loading');
   }
 
-  // ทำ normalize (ตัดช่องว่าง, เปลี่ยนเป็น lower case) เพื่อง่ายต่อการค้นหา/เปรียบเทียบ
+  // ทำ normalize (ตัดช่องว่าง, เปลี่ยนเป็น lower case) เพื่อการค้นหา/เปรียบเทียบ
   function normalizeString(str) {
     return str ? str.trim().toLowerCase().replace(/\s+/g, '') : '';
   }
 
-  // อัปเดตสถิติจำนวนโรงเรียน (แสดงที่กล่องสถิติ)
+  // -------------------------------------------------------------------------------------------------
+  // ฟังก์ชันอัปเดตสถิติจำนวนโรงเรียน (แสดงที่กล่องสถิติ)
+  // -------------------------------------------------------------------------------------------------
   function updateStatistics(filteredSchools) {
     const total = filteredSchools.length;
     let primary = 0, secondary = 0;
@@ -92,13 +100,14 @@
     secondarySchoolsSpan.textContent = secondary.toLocaleString();
   }
 
-  // กำหนดสีให้แต่ละเขต (เฉดสีส้ม-แดงวนไปตาม index)
+  // -------------------------------------------------------------------------------------------------
+  // ฟังก์ชันเลือกสีโพลิกอนแต่ละเขต (gradient)
+  // -------------------------------------------------------------------------------------------------
   function getDistrictColor(index) {
     const colors = ['#FFE0B2','#FFC107','#FF9800','#F57C00','#E65100','#BF360C'];
     return colors[index % colors.length];
   }
 
-  // Style ของโพลิกอนเขตแต่ละ feature
   function styleDistrict(feature) {
     const idx = uniqueDistrictNames.findIndex(d =>
       normalizeString(d) === normalizeString(feature.properties.NAME_TH)
@@ -111,7 +120,9 @@
     };
   }
 
-  // เมื่อ mouseover บนโพลิกอน (highlight + tooltip)
+  // -------------------------------------------------------------------------------------------------
+  // ฟังก์ชัน highlight โพลิกอนเขตเมื่อ mouseover
+  // -------------------------------------------------------------------------------------------------
   function highlightDistrictLayer(e) {
     const layer = e.target;
     layer.setStyle({
@@ -125,19 +136,13 @@
       className: 'district-label'
     }).openTooltip();
   }
-
-  // เมื่อ mouseout จากโพลิกอน (reset style)
   function resetHighlightDistrictLayer(e) {
     districtsLayer.resetStyle(e.target);
     e.target.closeTooltip();
   }
-
-  // เมื่อคลิกโพลิกอนเขต (zoom to that district)
   function zoomToDistrictLayer(e) {
     map.fitBounds(e.target.getBounds(), { padding: [50,50] });
   }
-
-  // ผูกเหตุการณ์แต่ละโพลิกอนเขต
   function onEachDistrictFeature(feature, layer) {
     layer.on({
       mouseover: highlightDistrictLayer,
@@ -154,7 +159,6 @@
       ? 'โรงเรียนประถมศึกษา'
       : 'โรงเรียนมัธยมศึกษา';
 
-    // เตรียม HTML ของลิงก์เว็บไซต์
     let websiteHtml = 'ไม่มีข้อมูลเว็บไซต์';
     if (school.url && school.url.trim() !== '') {
       let rawUrl = school.url.trim();
@@ -168,7 +172,6 @@
         </a>`;
     }
 
-    // ตรวจสอบว่ามีสถานีใกล้เคียงหรือไม่ (ภายใน 1 กม.)
     let nearbyHtml = '';
     if (school.nearbyStations && school.nearbyStations.length > 0) {
       nearbyHtml = `
@@ -206,7 +209,7 @@
   }
 
   // -------------------------------------------------------------------------------------------------
-  // ฟังก์ชันดาวน์โหลดข้อมูล และเตรียมเลเยอร์ทั้งหมด
+  // ฟังก์ชันโหลดข้อมูลและเตรียมเลเยอร์ทั้งหมด
   // -------------------------------------------------------------------------------------------------
   async function loadMapData() {
     showLoading();
@@ -235,14 +238,12 @@
       transitData          = await transitResp.json();
       const districtsGeoJSON = await districtsResp.json();
 
-      // สร้าง Map จาก id_sch → url (เพื่อผสานกับ allSchoolData)
+      // Map จาก id_sch → url (เพื่อผสานกับ allSchoolData)
       const urlMap = {};
       becData.forEach(item => { urlMap[item.id_sch] = item.url || ''; });
-
-      // ผนวก URL ลงใน allSchoolData (ใช้ school_id แม็ปกับ id_sch)
       allSchoolData.forEach(s => { s.url = urlMap[s.school_id] || ''; });
 
-      // สร้าง map จาก school_id → ประเภทโรงเรียน (primary/secondary) ตาม schoolsInfo
+      // map จาก school_id → ประเภทโรงเรียน (primary/secondary) จาก schoolsInfo
       schoolsInfo.forEach(s => {
         const normalized = s.district_name || '';
         if (normalized.includes('ประถมศึกษา')) {
@@ -250,7 +251,7 @@
         } else if (normalized.includes('มัธยมศึกษา')) {
           schoolTypeMap[s.school_id] = 'secondary';
         } else {
-          // กรณีไม่แน่ชัด กำหนดเป็น secondary เป็น default
+          // ถ้าไม่เจอตรงคำว่า ประถม/มัธยม ให้กำหนดเป็น secondary (default)
           schoolTypeMap[s.school_id] = 'secondary';
         }
       });
@@ -320,7 +321,9 @@
         }
       });
 
-      // --- (1) สร้างไอคอนและเลเยอร์สำหรับ BTS/MRT) ----
+      // -------------------------------------------------------------------------------------------------
+      // สร้างไอคอนและเลเยอร์สำหรับ BTS/MRT
+      // -------------------------------------------------------------------------------------------------
       const btsIcon = L.divIcon({
         html: '<div class="marker-base bts-station-marker-icon"></div>',
         iconSize: [18, 18],
@@ -337,7 +340,7 @@
       const btsLayer = L.layerGroup();
       const mrtLayer = L.layerGroup();
 
-      // --- (2) วนลูปสร้าง marker สถานี BTS/MRT จาก transitData) ----
+      // วนลูปสร้าง marker สถานี BTS/MRT จาก transitData
       transitData.features.forEach(f => {
         const props = f.properties;
         const lat = props.lat;
@@ -380,7 +383,9 @@
         }
       });
 
-      // --- (3) สร้างไอคอนสำหรับโรงเรียนและสร้าง Marker โรงเรียนแต่ละแห่ง --- 
+      // -------------------------------------------------------------------------------------------------
+      // สร้างไอคอนสำหรับโรงเรียนและสร้าง Marker โรงเรียนแต่ละแห่ง
+      // -------------------------------------------------------------------------------------------------
       const primaryIcon = L.divIcon({
         html: '<div class="marker-base primary-school-marker-icon"></div>',
         iconSize: [18, 18],
@@ -444,11 +449,12 @@
         }
       });
 
-      // แสดงจำนวน Marker ที่ถูกสร้างลงในแต่ละ cluster
       console.log('>>> Debug: จำนวน Marker โรงเรียนประถม =', primarySchoolMarkers.getLayers().length);
       console.log('>>> Debug: จำนวน Marker โรงเรียนมัธยม =', secondarySchoolMarkers.getLayers().length);
 
-      // --- (4) สร้าง Layer Control ให้รวม BTS/MRT และ โรงเรียนด้วย ---
+      // -------------------------------------------------------------------------------------------------
+      // สร้าง Layer Control ให้รวมขอบเขต, Heatmap, โรงเรียน, BTS/MRT
+      // -------------------------------------------------------------------------------------------------
       const overlayMaps = {
         "ขอบเขตกรุงเทพมหานคร": districtsLayer,
         "Heatmap ความหนาแน่น": heatLayer,
@@ -471,7 +477,9 @@
       // btsLayer.addTo(map);
       // mrtLayer.addTo(map);
 
-      // --- (5) ปรับ Legend ให้มี BTS/MRT ด้วย ---
+      // -------------------------------------------------------------------------------------------------
+      // ปรับ Legend ให้มี BTS/MRT ด้วย
+      // -------------------------------------------------------------------------------------------------
       const legend = L.control({ position: 'bottomright' });
       legend.onAdd = function() {
         const div = L.DomUtil.create('div', 'info legend');
@@ -496,11 +504,11 @@
           </div>
           <div style="clear: both; margin-top: 6px;"></div>
           <div>
-            <i class="bts-station-legend marker-base" style="background-color: #009900;"></i>
+            <i class="bts-station-legend marker-base" style="background-color: var(--bts-station-marker-color);"></i>
             สถานี BTS
           </div>
           <div>
-            <i class="mrt-station-legend marker-base" style="background-color: #0033cc;"></i>
+            <i class="mrt-station-legend marker-base" style="background-color: var(--mrt-station-marker-color);"></i>
             สถานี MRT
           </div>
         `;
@@ -743,10 +751,16 @@
   // Theme Toggle (Light / Dark Mode)
   // -------------------------------------------------------------------------------------------------
   function applyTheme(theme) {
+    // เปลี่ยนคลาส dark บน body
     document.body.classList.toggle('dark', theme === 'dark');
+    // เปลี่ยนไอคอนของปุ่ม
     themeIcon.className = theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    // เรียก addTileLayer เพื่อโหลด Tile Layer ตามธีม
     addTileLayer(theme);
-    if (districtsLayer) districtsLayer.setStyle(styleDistrict);
+    // ถ้า districtsLayer ถูกสร้างแล้ว ให้อัปเดตการวาดโพลิกอนอีกครั้ง
+    if (districtsLayer) {
+      districtsLayer.setStyle(styleDistrict);
+    }
   }
 
   themeToggle.addEventListener('click', () => {
@@ -756,6 +770,7 @@
     applyTheme(nextTheme);
   });
 
+  // อ่านค่า theme จาก localStorage (ถ้ามี) หรือกำหนด default เป็น 'light'
   const savedTheme = localStorage.getItem('theme') || 'light';
   applyTheme(savedTheme);
 
