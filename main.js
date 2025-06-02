@@ -27,21 +27,22 @@
     }
     // สร้างและใส่ Tile ให้ตรงกับธีม
     if (theme === 'dark') {
+      // ใช้ CartoDB Dark Matter (ไม่ต้องใช้ API Key) แทน Stadia Dark
       currentTileLayer = L.tileLayer(
-        'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
+        'https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
         {
-          attribution: '© Stadia Maps © OpenStreetMap contributors',
-          maxZoom: 20,
-          minZoom: 9
+          attribution: '© OpenStreetMap contributors © CARTO',
+          maxZoom: 19,
+          subdomains: 'abcd'
         }
       ).addTo(map);
     } else {
+      // โหมด Light → OpenStreetMap ปกติ
       currentTileLayer = L.tileLayer(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         {
           attribution: '© OpenStreetMap contributors',
-          maxZoom: 18,
-          minZoom: 9
+          maxZoom: 19
         }
       ).addTo(map);
     }
