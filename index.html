@@ -146,16 +146,23 @@
       --chart-tooltip-text: #2D3748;
     }
 
-    /* Body Base */
-    body {
+    /* ------------------------------------------- */
+    /* General Layout */
+    /* ------------------------------------------- */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
       font-family: 'Kanit', sans-serif;
       background-color: var(--bg-color);
       color: var(--text-color);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    #app {
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      transition: background-color 0.3s ease, color 0.3s ease;
-      scroll-behavior: smooth;
     }
 
     /* Navbar */
@@ -629,114 +636,117 @@
     }
   </style>
 </head>
+
 <body class="antialiased">
-  <!-- Navbar -->
-  <nav class="navbar-orange-gold shadow-xl py-4 px-6 md:px-12 rounded-b-xl sticky top-0 z-50">
-    <div class="container mx-auto flex justify-between items-center">
-      <a href="#home-section" class="text-white text-2xl md:text-3xl font-bold tracking-wide">
-        ระบบข้อมูลโรงเรียน
-      </a>
-      <div class="hidden md:flex space-x-6 items-center">
-        <a href="#home-section" class="text-white hover:text-gray-200 transition duration-300 ease-in-out px-4 py-2 rounded-lg font-medium">หน้าหลัก</a>
-        <a href="contact.html" class="bg-white text-orange-600 hover:bg-gray-100 transition duration-300 ease-in-out px-4 py-2 rounded-lg font-semibold shadow-md">ติดต่อเรา</a>
-        <a href="#school-map-section" class="text-white hover:text-gray-200 transition duration-300 ease-in-out px-4 py-2 rounded-lg font-medium">แผนที่โรงเรียน</a>
-        <!-- ปุ่มสลับธีม -->
-        <button id="theme-toggle" class="bg-white text-gray-700 hover:bg-gray-100 transition duration-300 ease-in-out px-3 py-2 rounded-lg shadow-md flex items-center gap-2">
-          <i class="fas fa-sun" id="theme-icon"></i>
-          <span class="hidden md:inline">สลับธีม</span>
-        </button>
+  <div id="app">
+    <!-- Navbar -->
+    <nav class="navbar-orange-gold shadow-xl py-4 px-6 md:px-12 rounded-b-xl sticky top-0 z-50">
+      <div class="container mx-auto flex justify-between items-center">
+        <a href="#home-section" class="text-white text-2xl md:text-3xl font-bold tracking-wide">
+          ระบบข้อมูลโรงเรียน
+        </a>
+        <div class="hidden md:flex space-x-6 items-center">
+          <a href="#home-section" class="text-white hover:text-gray-200 transition duration-300 ease-in-out px-4 py-2 rounded-lg font-medium">หน้าหลัก</a>
+          <a href="contact.html" class="bg-white text-orange-600 hover:bg-gray-100 transition duration-300 ease-in-out px-4 py-2 rounded-lg font-semibold shadow-md">ติดต่อเรา</a>
+          <a href="#school-map-section" class="text-white hover:text-gray-200 transition duration-300 ease-in-out px-4 py-2 rounded-lg font-medium">แผนที่โรงเรียน</a>
+          <!-- ปุ่มสลับธีม -->
+          <button id="theme-toggle" class="bg-white text-gray-700 hover:bg-gray-100 transition duration-300 ease-in-out px-3 py-2 rounded-lg shadow-md flex items-center gap-2">
+            <i class="fas fa-sun" id="theme-icon"></i>
+            <span class="hidden md:inline">สลับธีม</span>
+          </button>
+        </div>
+        <div class="md:hidden">
+          <button class="text-white focus:outline-none">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+        </div>
       </div>
-      <div class="md:hidden">
-        <button class="text-white focus:outline-none">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </nav>
+    </nav>
 
-  <main class="flex-grow">
-    <!-- Section: ภาพรวมข้อมูล -->
-    <section id="home-section" class="container mx-auto px-4 py-16 text-center">
-      <h1 class="main-title text-4xl md:text-5xl font-extrabold text-gray-800 leading-tight">
-        ข้อมูลโรงเรียนใน&nbsp;<span class="text-orange-600">กรุงเทพมหานคร</span>
-      </h1>
-      <p class="main-subtitle text-lg md:text-xl text-gray-600 mt-4 max-w-2xl mx-auto mb-8">
-        ค้นหาโรงเรียนที่คุณต้องการด้วยระบบแผนที่อัจฉริยะ พร้อมข้อมูลที่อัปเดตตามเวลาจริง
-      </p>
+    <main class="flex-grow">
+      <!-- Section: ภาพรวมข้อมูล -->
+      <section id="home-section" class="container mx-auto px-4 py-16 text-center">
+        <h1 class="main-title text-4xl md:text-5xl font-extrabold text-gray-800 leading-tight">
+          ข้อมูลโรงเรียนใน&nbsp;<span class="text-orange-600">กรุงเทพมหานคร</span>
+        </h1>
+        <p class="main-subtitle text-lg md:text-xl text-gray-600 mt-4 max-w-2xl mx-auto mb-8">
+          ค้นหาโรงเรียนที่คุณต้องการด้วยระบบแผนที่อัจฉริยะ พร้อมข้อมูลที่อัปเดตตามเวลาจริง
+        </p>
 
-      <h2 class="text-3xl font-bold text-gray-800 mb-8 mt-12 text-center">ภาพรวมข้อมูลที่น่าสนใจ</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center transform transition duration-300 hover:scale-105 hover:shadow-2xl">
-          <div class="rounded-md mb-4 overflow-hidden w-full aspect-w-16 aspect-h-9 border border-gray-200">
-            <img src="numstu.jpg" alt="แผนที่แสดงจำนวนนักเรียนในแต่ละเขต" class="w-full h-full object-cover">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8 mt-12 text-center">ภาพรวมข้อมูลที่น่าสนใจ</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center transform transition duration-300 hover:scale-105 hover:shadow-2xl">
+            <div class="rounded-md mb-4 overflow-hidden w-full aspect-w-16 aspect-h-9 border border-gray-200">
+              <img src="numstu.jpg" alt="แผนที่แสดงจำนวนนักเรียนในแต่ละเขต" class="w-full h-full object-cover">
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">จำนวนนักเรียนในแต่ละเขต</h3>
+            <p class="text-gray-600 text-center text-sm">แสดงการกระจายตัวของจำนวนนักเรียนในแต่ละเขตของกรุงเทพมหานคร</p>
           </div>
-          <h3 class="text-xl font-semibold text-gray-800 mb-2">จำนวนนักเรียนในแต่ละเขต</h3>
-          <p class="text-gray-600 text-center text-sm">แสดงการกระจายตัวของจำนวนนักเรียนในแต่ละเขตของกรุงเทพมหานคร</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center transform transition duration-300 hover:scale-105 hover:shadow-2xl">
-          <div class="rounded-md mb-4 overflow-hidden w-full aspect-w-16 aspect-h-9 border border-gray-200">
-            <img src="total.jpg" alt="แผนที่แสดงจำนวนประชากรในแต่ละเขต" class="w-full h-full object-cover">
+          <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center transform transition duration-300 hover:scale-105 hover:shadow-2xl">
+            <div class="rounded-md mb-4 overflow-hidden w-full aspect-w-16 aspect-h-9 border border-gray-200">
+              <img src="total.jpg" alt="แผนที่แสดงจำนวนประชากรในแต่ละเขต" class="w-full h-full object-cover">
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">จำนวนประชากรในแต่ละเขต</h3>
+            <p class="text-gray-600 text-center text-sm">แสดงข้อมูลการกระจายตัวของประชากรในแต่ละเขตพื้นที่</p>
           </div>
-          <h3 class="text-xl font-semibold text-gray-800 mb-2">จำนวนประชากรในแต่ละเขต</h3>
-          <p class="text-gray-600 text-center text-sm">แสดงข้อมูลการกระจายตัวของประชากรในแต่ละเขตพื้นที่</p>
-        </div>
-        <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center transform transition duration-300 hover:scale-105 hover:shadow-2xl">
-          <div class="rounded-md mb-4 overflow-hidden w-full aspect-w-16 aspect-h-9 border border-gray-200">
-            <img src="ขอบเขต.jpg" alt="แผนที่แสดงขอบเขตของกรุงเทพมหานคร" class="w-full h-full object-cover">
+          <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center transform transition duration-300 hover:scale-105 hover:shadow-2xl">
+            <div class="rounded-md mb-4 overflow-hidden w-full aspect-w-16 aspect-h-9 border border-gray-200">
+              <img src="ขอบเขต.jpg" alt="แผนที่แสดงขอบเขตของกรุงเทพมหานคร" class="w-full h-full object-cover">
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">ขอบเขตกรุงเทพมหานคร</h3>
+            <p class="text-gray-600 text-center text-sm">แสดงแผนที่ขอบเขตการปกครองของกรุงเทพมหานคร</p>
           </div>
-          <h3 class="text-xl font-semibold text-gray-800 mb-2">ขอบเขตกรุงเทพมหานคร</h3>
-          <p class="text-gray-600 text-center text-sm">แสดงแผนที่ขอบเขตการปกครองของกรุงเทพมหานคร</p>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Section: แผนที่โรงเรียน -->
-    <section id="school-map-section" class="container mx-auto px-4 py-16 relative">
-      <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">แผนที่ข้อมูลโรงเรียนในกรุงเทพมหานคร</h2>
+      <!-- Section: แผนที่โรงเรียน -->
+      <section id="school-map-section" class="container mx-auto px-4 py-16 relative">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">แผนที่ข้อมูลโรงเรียนในกรุงเทพมหานคร</h2>
 
-      <!-- Controls: Search / Filter / Stats -->
-      <div id="controls-container">
-        <div id="search-box" class="relative">
-          <i class="fas fa-search control-icon absolute left-4 top-1/2 transform -translate-y-1/2"></i>
-          <input type="text" id="search-input" placeholder="ค้นหาชื่อโรงเรียน..." class="pl-10"/>
-          <div id="autocomplete-list" class="absolute"></div>
+        <!-- Controls: Search / Filter / Stats -->
+        <div id="controls-container">
+          <div id="search-box" class="relative">
+            <i class="fas fa-search control-icon absolute left-4 top-1/2 transform -translate-y-1/2"></i>
+            <input type="text" id="search-input" placeholder="ค้นหาชื่อโรงเรียน..." class="pl-10"/>
+            <div id="autocomplete-list" class="absolute"></div>
+          </div>
+          <div id="filter-box">
+            <i class="fas fa-filter control-icon"></i>
+            <select id="district-filter">
+              <option value="">เลือกเขตทั้งหมด</option>
+            </select>
+          </div>
+          <div id="statistics-box">
+            <h4>ภาพรวมโรงเรียน</h4>
+            <div><span>จำนวนโรงเรียนทั้งหมด:</span> <strong id="total-schools">0</strong> แห่ง</div>
+            <div><span>โรงเรียนประถม:</span> <strong id="primary-schools">0</strong> แห่ง</div>
+            <div><span>โรงเรียนมัธยม:</span> <strong id="secondary-schools">0</strong> แห่ง</div>
+          </div>
         </div>
-        <div id="filter-box">
-          <i class="fas fa-filter control-icon"></i>
-          <select id="district-filter">
-            <option value="">เลือกเขตทั้งหมด</option>
-          </select>
+
+        <!-- Real-time Clock -->
+        <div id="real-time-clock"></div>
+
+        <!-- Map Container -->
+        <div id="map" class="w-full mx-auto mt-4"></div>
+        <div id="loading-message"><div class="spinner"></div><span>กำลังโหลดข้อมูล...</span></div>
+      </section>
+
+      <!-- Section: กราฟจำนวนโรงเรียนต่อเขต -->
+      <section id="chart-section" class="container mx-auto px-4 py-16">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">จำนวนโรงเรียนในแต่ละเขต</h2>
+        <div id="chart-container">
+          <canvas id="school-count-chart"></canvas>
         </div>
-        <div id="statistics-box">
-          <h4>ภาพรวมโรงเรียน</h4>
-          <div><span>จำนวนโรงเรียนทั้งหมด:</span> <strong id="total-schools">0</strong> แห่ง</div>
-          <div><span>โรงเรียนประถม:</span> <strong id="primary-schools">0</strong> แห่ง</div>
-          <div><span>โรงเรียนมัธยม:</span> <strong id="secondary-schools">0</strong> แห่ง</div>
-        </div>
-      </div>
+      </section>
+    </main>
 
-      <!-- Real-time Clock -->
-      <div id="real-time-clock"></div>
-
-      <!-- Map Container -->
-      <div id="map" class="w-full mx-auto mt-4"></div>
-      <div id="loading-message"><div class="spinner"></div><span>กำลังโหลดข้อมูล...</span></div>
-    </section>
-
-    <!-- Section: กราฟจำนวนโรงเรียนต่อเขต -->
-    <section id="chart-section" class="container mx-auto px-4 py-16">
-      <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">จำนวนโรงเรียนในแต่ละเขต</h2>
-      <div id="chart-container">
-        <canvas id="school-count-chart"></canvas>
-      </div>
-    </section>
-  </main>
-
-  <footer class="bg-gray-100 text-gray-600 py-6 text-center mt-auto rounded-t-xl shadow-inner">
-    <p>© 2025 ระบบข้อมูลโรงเรียน. สงวนลิขสิทธิ์.</p>
-  </footer>
+    <footer class="bg-gray-100 text-gray-600 py-6 text-center mt-auto rounded-t-xl shadow-inner">
+      <p>© 2025 ระบบข้อมูลโรงเรียน. สงวนลิขสิทธิ์.</p>
+    </footer>
+  </div>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
